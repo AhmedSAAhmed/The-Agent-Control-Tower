@@ -4,7 +4,7 @@ An operator cockpit for a fleet of AI customer-service agents that act on real s
 DOO builder challenge: watch the fleet live, approve risky actions, pause or kill any agent, replay its
 reasoning, track cost per task, and see a rogue agent caught and contained.
 
-- **Live demo:** _add Render URL_
+- **Live demo:** https://agent-control-tower-f4vv.onrender.com (free tier: first load after idle can take about a minute)
 - **Architecture:** [04_ship/output/architecture.md](04_ship/output/architecture.md) (also `/architecture` in the app)
 - **Thesis:** [04_ship/output/thesis.md](04_ship/output/thesis.md)
 - **Notes for reviewers:** [04_ship/output/submission-notes.md](04_ship/output/submission-notes.md)

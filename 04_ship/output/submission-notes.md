@@ -1,7 +1,7 @@
 # Submission notes (paste into the form)
 
 **What to look at (3 minutes):**
-1. Open the live URL. Four agents across three fictional tenants are working on real free-tier LLMs;
+1. Open https://agent-control-tower-f4vv.onrender.com. Four agents across three fictional tenants are working on real free-tier LLMs;
    the event stream at the bottom is live (SSE), not polled.
 2. Click **Prompt-injection hijack**. Within ~15 s Saad (Rimal Eats support) receives a WhatsApp ticket
    hiding instructions to export customer data. Llama Prompt Guard flags it; the drill then simulates a
