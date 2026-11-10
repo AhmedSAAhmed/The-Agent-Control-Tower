@@ -1,0 +1,8 @@
+{% for e in rows %}
+<tr class="sev-{{ e.severity }}">
+  <td class="r mono">{{ e.id }}</td><td class="mono">{{ e.ts|clock }}</td>
+  <td>{{ tenants[e.tenant_id].name if e.tenant_id else '—' }}</td>
+  <td>{{ e.actor }}</td><td class="mono {{ 'sev-' ~ e.severity }}">{{ e.type }}</td>
+  <td>{{ e.summary }}</td><td class="mono faint">{{ e.hash[:12] }}</td>
+</tr>
+{% else %}<tr><td colspan="7" class="empty">No events.</td></tr>{% endfor %}

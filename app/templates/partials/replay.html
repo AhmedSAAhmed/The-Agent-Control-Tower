@@ -1,0 +1,36 @@
+{% if not steps %}<div class="empty">No steps recorded yet.</div>{% else %}
+<div class="replay">
+  <ol class="steps">
+    {% for e in steps %}
+    <li data-id="{{ e.id }}" class="sev-{{ e.severity }}">
+      <span class="n">{{ loop.index }}</span>
+      <span><span class="t mono {{ 'sev-' ~ e.severity }}">{{ e.type }}</span> · <span class="faint">{{ e.ts|clock }}</span><br>{{ e.summary[:140] }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  <div class="step-detail" id="step-detail"></div>
+</div>
+{% for e in steps %}
+<template id="step-{{ e.id }}">
+  <dl>
+    <dt>Event</dt><dd class="mono">#{{ e.id }} · {{ e.type }}</dd>
+    <dt>When</dt><dd>{{ e.ts|clock }} UTC</dd>
+    <dt>Actor</dt><dd>{{ e.actor }}</dd>
+    <dt>Task</dt><dd class="mono">{{ e.task_id or '—' }}</dd>
+    {% if e.data.provider %}<dt>Model</dt><dd>{{ e.data.provider }} · {{ e.data.model }}{% if e.data.latency_ms %} · {{ e.data.latency_ms }} ms{% endif %}</dd>
+    <dt>Tokens / cost</dt><dd>{{ e.data.tokens_in }} in · {{ e.data.tokens_out }} out · ${{ '%.6f'|format(e.data.cost_usd or 0) }}</dd>{% endif %}
+    {% if e.data.fallback_reason %}<dt>Fallback</dt><dd>{{ e.data.fallback_reason }}</dd>{% endif %}
+    {% if e.data.rules %}<dt>Policy rules</dt><dd class="mono sev-critical">{{ e.data.rules|join(', ') }}</dd>{% endif %}
+    {% if e.data.risk is defined %}<dt>Risk</dt><dd>{{ e.data.risk }}</dd>{% endif %}
+    <dt>Hash</dt><dd class="mono faint">{{ e.hash[:16] }}… ← {{ e.prev_hash[:10] }}…</dd>
+  </dl>
+  <p><b>{{ e.summary }}</b></p>
+  {% if e.data.prompt %}<div class="faint">What the agent saw</div><pre>{{ e.data.prompt }}</pre>{% endif %}
+  {% if e.data.output %}<div class="faint">What it decided</div><pre>{{ e.data.output|pretty }}</pre>{% endif %}
+  {% if e.data.text %}<div class="faint">Flagged input</div><pre dir="auto">{{ e.data.text }}</pre>{% endif %}
+  {% if e.data.args %}<div class="faint">Tool arguments</div><pre>{{ e.data.args|pretty }}</pre>{% endif %}
+  {% if e.data.result %}<div class="faint">Result</div><pre>{{ e.data.result|pretty }}</pre>{% endif %}
+  {% if e.data.work %}<div class="faint">Work item</div><pre dir="auto">{{ e.data.work|pretty }}</pre>{% endif %}
+</template>
+{% endfor %}
+{% endif %}

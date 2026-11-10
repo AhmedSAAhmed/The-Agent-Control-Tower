@@ -1,0 +1,21 @@
+<div class="panel-b" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;align-items:start">
+  <div><span class="pill s-{{ a.status }}">{{ STATUS_LABEL[a.status] }}</span>
+    <div class="faint" style="margin-top:6px">{{ a.kind }} agent · scope: <span class="mono">{{ tower.policy.scopes[a.kind]|sort|join(', ') }}</span></div></div>
+  <div class="now"><span class="k">Current task</span>{{ a.task.title if a.task else '—' }}</div>
+  <div class="now"><span class="k">Last action</span>{{ a.last_action }}</div>
+  <div class="now"><span class="k">Spend</span>{{ a.cost_usd|usd }} of ${{ '%.2f'|format(a.budget_usd) }} · {{ (a.tokens_in + a.tokens_out)|num }} tokens</div>
+  <div class="now"><span class="k">Drift vs policy</span>{{ (a.drift * 100)|int }}% of last {{ a.decisions|length }} decisions</div>
+  <div class="actions">
+    {% if a.status == 'killed' %}
+      <button class="btn sm" hx-post="/agents/{{ a.id }}/restart" hx-swap="none">Restart clean</button>
+    {% elif a.status == 'paused' %}
+      <button class="btn sm ok" hx-post="/agents/{{ a.id }}/resume" hx-swap="none">Resume</button>
+    {% elif a.status != 'quarantined' %}
+      <button class="btn sm" hx-post="/agents/{{ a.id }}/pause" hx-swap="none">Pause</button>
+    {% endif %}
+    {% if a.status != 'killed' %}
+      <button class="btn sm danger" hx-post="/agents/{{ a.id }}/kill" hx-swap="none" hx-confirm="Kill {{ a.name }}?">Kill</button>
+    {% endif %}
+  </div>
+</div>
+{% if a.blocker %}<div class="blocker" style="margin:0 16px 14px">{{ a.blocker }}</div>{% endif %}

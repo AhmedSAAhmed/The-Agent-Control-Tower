@@ -1,0 +1,74 @@
+# Control-plane policy: the single home for tenants, agent scopes and risk thresholds.
+# The tool gateway evaluates every agent tool call against this file. Edit, restart, done.
+
+tenants:
+  pearl-bank:
+    name: Pearl Bank
+    sector: Retail banking
+    region: Bahrain
+    currency: BHD
+    channels: [WhatsApp, App chat]
+    withdrawal_approval_over: 2000      # BHD; above this a human approves
+    withdrawal_hard_cap: 25000          # BHD; above this the gateway refuses outright
+    new_beneficiary_hours: 24           # payouts to a beneficiary younger than this need approval
+    kyc_risk_approval_over: 70          # KYC approvals at or above this risk score need a human
+  dilmun-telecom:
+    name: Dilmun Telecom
+    sector: Telecom
+    region: Bahrain
+    currency: BHD
+    channels: [WhatsApp, Voice]
+    refund_approval_over: 15
+    refund_hard_cap: 200
+  rimal-eats:
+    name: Rimal Eats
+    sector: Food delivery
+    region: Saudi Arabia
+    currency: SAR
+    channels: [WhatsApp, Instagram]
+    refund_approval_over: 150
+    refund_hard_cap: 1500
+
+agents:
+  - id: noor-kyc
+    tenant: pearl-bank
+    kind: kyc
+    name: Noor
+    role: KYC Onboarding
+    budget_usd: 0.25
+  - id: faisal-withdrawals
+    tenant: pearl-bank
+    kind: withdrawals
+    name: Faisal
+    role: Withdrawals
+    budget_usd: 0.25
+  - id: layla-support
+    tenant: dilmun-telecom
+    kind: support
+    name: Layla
+    role: Customer Support
+    budget_usd: 0.25
+  - id: saad-support
+    tenant: rimal-eats
+    kind: support
+    name: Saad
+    role: Customer Support
+    budget_usd: 0.25
+
+# Least privilege: a tool outside an agent's scope is denied and counted as a strike.
+scopes:
+  kyc: [kyc.fetch_application, sanctions.screen, kyc.decide, crm.note]
+  withdrawals: [payments.get_request, payments.check_beneficiary, payments.execute, payments.hold, crm.note]
+  support: [crm.lookup_customer, orders.get, support.reply, support.refund, support.escalate]
+
+# Destinations any agent may send data to. Everything else is exfiltration.
+egress_allowlist: [api.pearlbank.internal, crm.dilmun.internal, ops.rimaleats.internal]
+
+guardian:
+  strike_window_seconds: 60
+  critical_strikes_to_quarantine: 2     # e.g. out-of-scope + egress attempt
+  denials_to_quarantine: 3
+  max_tool_calls_per_30s: 12            # runaway-loop detector
+  drift_window: 10                      # last N decisions compared to the policy baseline
+  drift_alert_ratio: 0.4
+  injection_threshold: 0.8              # prompt-guard score that taints a task

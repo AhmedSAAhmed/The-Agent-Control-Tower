@@ -1,0 +1,8 @@
+{% if k %}<div class="kpis">
+  <div class="kpi"><b>{{ k.running }}/{{ k.agents }}</b><span>agents working</span></div>
+  <div class="kpi {{ 'attn' if k.pending }}"><b>{{ k.pending }}</b><span>approvals waiting</span></div>
+  <div class="kpi {{ 'alert' if k.incidents }}"><b>{{ k.incidents }}</b><span>open incidents</span></div>
+  <div class="kpi"><b>{{ k.tasks|num }}</b><span>tasks completed</span></div>
+  <div class="kpi"><b>{{ k.cost|usd }}</b><span>{{ k.tokens|num }} tokens</span></div>
+  <div class="kpi {{ 'alert' if k.egress_bytes }}"><b>{{ k.egress_bytes }} B</b><span>data egress · {{ k.blocked_egress }} exfil attempt{{ "" if k.blocked_egress == 1 else "s" }} blocked</span></div>
+</div>{% endif %}

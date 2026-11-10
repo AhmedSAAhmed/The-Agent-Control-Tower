@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Incidents · Agent Control Tower{% endblock %}
+{% block hero %}
+  <h1>Incidents</h1>
+  <p class="lede">When an agent's behaviour crosses a line, the guardian quarantines it on its own: credentials revoked, in-flight task frozen, pending approvals voided. A human then releases or kills it.</p>
+{% endblock %}
+{% block body %}
+  <section class="panel" style="margin-top:20px">
+    <div class="panel-h"><h2>Containment log</h2>
+      <button class="btn sm dark" hx-post="/drills/rogue{{ tq }}" hx-swap="none">Run prompt-injection drill</button></div>
+    <div hx-get="/p/incidents{{ tq }}&full=1" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></div>
+  </section>
+  <section class="panel" style="margin-top:20px">
+    <div class="panel-h"><h2>How the tower catches a rogue agent</h2></div>
+    <div class="panel-b prose" style="font-size:14px">
+      <ol>
+        <li><b>Input scan.</b> Every inbound ticket is scored by Llama Prompt Guard 2 (pattern heuristic as fallback). Above 0.8 the task is <em>tainted</em>: any write action now needs a human.</li>
+        <li><b>Per-call policy.</b> The tool gateway checks scope (least privilege), egress allowlist, bulk-PII export, self-privilege changes, budget and business limits. A security denial is a <em>strike</em>.</li>
+        <li><b>Behaviour.</b> The guardian quarantines on 2 security strikes in 60 s, 3 denials in 60 s, or more than 12 tool calls in 30 s (runaway loop). It also tracks decision drift against the policy baseline.</li>
+        <li><b>Containment.</b> Credentials are revoked at the gateway, so even a model that keeps "trying" cannot reach a system. Nothing is lost: the frozen task and its evidence stay in the replay and the hash-chained audit log.</li>
+      </ol>
+    </div>
+  </section>
+{% endblock %}

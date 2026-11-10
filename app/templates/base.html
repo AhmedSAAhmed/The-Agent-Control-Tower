@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Agent Control Tower{% endblock %}</title>
+  <meta name="description" content="Operator cockpit for a fleet of AI customer-service agents: live status, approvals, kill switch, replay, cost and audit.">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap">
+  <link rel="stylesheet" href="/static/tower.css?v=2">
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+  <script src="https://unpkg.com/idiomorph@0.7.4/dist/idiomorph-ext.min.js"></script>
+  <script src="/static/tower.js?v=1" defer></script>
+</head>
+<body hx-ext="sse,morph" sse-connect="/stream{{ tq }}">
+<header class="hero">
+  <nav class="nav">
+    <a class="brand" href="/{{ tq }}">CONTROL TOWER<small>for DOO agents</small></a>
+    <div class="nav-links">
+      <a href="/{{ tq }}" class="{{ 'on' if page == 'fleet' }}">Fleet</a>
+      <a href="/incidents{{ tq }}" class="{{ 'on' if page == 'incidents' }}">Incidents</a>
+      <a href="/costs{{ tq }}" class="{{ 'on' if page == 'costs' }}">Costs</a>
+      <a href="/audit{{ tq }}" class="{{ 'on' if page == 'audit' }}">Audit</a>
+      <a href="/architecture{{ tq }}" class="{{ 'on' if page == 'architecture' }}">Architecture</a>
+    </div>
+    <div class="nav-tools">
+      <select id="tenant" aria-label="Tenant">
+        <option value="">All tenants</option>
+        {% for tid, t in tenants.items() %}<option value="{{ tid }}" {{ 'selected' if tid == tenant_id }}>{{ t.name }}</option>{% endfor %}
+      </select>
+      <form hx-post="/settings" hx-trigger="change" hx-swap="none" style="display:flex;gap:10px">
+        <select name="mode" aria-label="LLM mode" title="LLM mode">
+          {% for m, label in [('hybrid','LLM + fallback'), ('live','LLM only'), ('scripted','Scripted')] %}
+          <option value="{{ m }}" {{ 'selected' if tower.llm.mode == m }}>{{ label }}</option>{% endfor %}
+        </select>
+        <input name="op" value="{{ op }}" aria-label="Operator name" title="Your name in the audit log">
+      </form>
+      <span class="live" id="live"><i></i><span>LIVE</span></span>
+    </div>
+  </nav>
+  <div class="hero-body">{% block hero %}{% endblock %}</div>
+</header>
+<main class="wrap">{% block body %}{% endblock %}</main>
+<footer>All tenants, customers and transactions are fictional. Costs are list-price equivalents; the demo runs on free LLM tiers.</footer>
+</body>
+</html>

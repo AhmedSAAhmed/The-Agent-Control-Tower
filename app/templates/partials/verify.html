@@ -1,0 +1,2 @@
+{% if v.ok %}<span class="verify-ok">✓ Chain intact · {{ v.checked|num }} events · head {{ v.head[:12] }}…</span>
+{% else %}<span class="verify-bad">✗ Chain broken at event #{{ v.broken_at }} ({{ v.checked }} verified before it)</span>{% endif %}

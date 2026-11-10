@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Costs · Agent Control Tower{% endblock %}
+{% block hero %}
+  <h1>Cost and tokens</h1>
+  <p class="lede">Per agent, per task, per tenant. Measured from provider usage on every LLM call, priced at the paid-tier list price so budgets mean something in production. Each agent pauses itself when it exhausts its budget.</p>
+{% endblock %}
+{% block body %}
+  <div style="margin-top:20px" hx-get="/p/costs{{ tq }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></div>
+{% endblock %}

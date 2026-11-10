@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Audit · Agent Control Tower{% endblock %}
+{% block hero %}
+  <h1>Audit log</h1>
+  <p class="lede">Append-only and hash-chained: each event stores the SHA-256 of the one before it, so an edited, deleted or reordered row breaks verification. Export per tenant for compliance review.</p>
+{% endblock %}
+{% block body %}
+  <div class="drills">
+    <a class="btn dark" href="/audit/export.csv{{ tq }}">Export CSV</a>
+    <a class="btn" href="/audit/export.json{{ tq }}">Export JSON (with chain proof)</a>
+    <button class="btn ghost" hx-get="/p/verify" hx-target="#verify">Verify chain</button>
+    <span id="verify"></span>
+    <span class="spacer"></span>
+    <form hx-get="/p/audit{{ tq }}" hx-target="#audit-rows" hx-trigger="change" class="player">
+      <label class="faint">Severity <select name="sev"><option value="">all</option><option value="warn">warn + critical</option><option value="critical">critical</option></select></label>
+    </form>
+  </div>
+  <section class="panel">
+    <div class="scroll-x"><table>
+      <thead><tr><th class="r">#</th><th>Time (UTC)</th><th>Tenant</th><th>Actor</th><th>Type</th><th>Summary</th><th>Hash</th></tr></thead>
+      <tbody id="audit-rows" hx-get="/p/audit{{ tq }}" hx-trigger="load, refresh from:body"></tbody>
+    </table></div>
+  </section>
+{% endblock %}

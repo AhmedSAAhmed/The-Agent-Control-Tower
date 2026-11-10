@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Fleet · Agent Control Tower{% endblock %}
+{% block hero %}
+  <h1>Know when an agent goes <em>wrong</em><br>before your customers do</h1>
+  <p class="lede">Live fleet of DOO customer-service agents across {{ tenants|length }} tenants. Every tool call passes the control plane: allowed, held for a human, or blocked.</p>
+  <div id="kpis" hx-get="/p/kpis{{ tq }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML">{% include "partials/kpis.html" ignore missing %}</div>
+{% endblock %}
+{% block body %}
+  <div class="drills">
+    <span class="label">Run a drill</span>
+    {% for key, label in tower.DRILLS.items() %}
+      <button class="btn {{ 'dark' if key == 'rogue' else 'ghost' }}" hx-post="/drills/{{ key }}{{ tq }}" hx-swap="none">{{ label }}</button>
+    {% endfor %}
+    <span class="spacer"></span>
+    <button class="btn danger" hx-post="/fleet/pause-all{{ tq }}" hx-swap="none"
+            hx-confirm="Emergency stop: pause every agent{{ ' in ' ~ tenants[tenant_id].name if tenant_id }}?">Emergency stop</button>
+    <button class="btn ghost" hx-post="/fleet/resume-all{{ tq }}" hx-swap="none">Resume all</button>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-h"><h2>Agent fleet</h2><span class="faint">updates live · click a name to replay</span></div>
+      <div id="fleet" hx-get="/p/fleet{{ tq }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></div>
+    </section>
+    <aside class="stack">
+      <section class="panel">
+        <div class="panel-h"><h2>Approval queue</h2><span class="faint">highest risk first</span></div>
+        <div id="approvals" hx-get="/p/approvals{{ tq }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-h"><h2>Incidents</h2><a class="faint" href="/incidents{{ tq }}">all incidents →</a></div>
+        <div id="incidents" hx-get="/p/incidents{{ tq }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></div>
+      </section>
+    </aside>
+  </div>
+
+  <section class="panel" style="margin-top:20px">
+    <div class="panel-h"><h2>Live event stream</h2><span class="faint">every row is hash-chained into the audit log</span></div>
+    <ul class="feed" sse-swap="feed" hx-swap="afterbegin">
+      {% for e in tower.store.query(tenant_id=tenant_id, limit=40) %}{% include "partials/event_row.html" %}{% endfor %}
+    </ul>
+  </section>
+{% endblock %}

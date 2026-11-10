@@ -1,0 +1,13 @@
+{% if not a.tasks %}<div class="empty">No tasks yet.</div>{% else %}
+<div class="scroll-x"><table>
+  <tr><th>Task</th><th>Status</th><th class="r">Tokens</th><th class="r">Cost</th><th class="r">Time</th></tr>
+  {% for t in a.tasks %}
+  <tr>
+    <td><a href="/agents/{{ a.id }}?task={{ t.id }}">{{ t.title }}</a><div class="faint mono">{{ t.id }}{% if t.outcome %} · {{ t.outcome }}{% endif %}</div></td>
+    <td><span class="pill {{ 's-running' if t.status == 'done' else 's-waiting_approval' if t.status in ('blocked','running') else 's-quarantined' }}">{{ t.status }}</span></td>
+    <td class="r">{{ (t.tokens_in + t.tokens_out)|num }}</td>
+    <td class="r">{{ t.cost_usd|usd }}</td>
+    <td class="r">{{ t.duration_s }}s</td>
+  </tr>
+  {% endfor %}
+</table></div>{% endif %}

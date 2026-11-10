@@ -1,0 +1,29 @@
+{% if not incidents %}<div class="empty">No incidents. Run the prompt-injection drill to see containment.</div>{% endif %}
+{% for i in incidents %}
+  {% set ag = tower.agents[i.agent_id] %}
+  <div class="inc {{ 'open' if i.status == 'open' }}">
+    <div class="appr-h"><span><b>{{ i.id }}</b> · {{ ag.name }} · {{ tenants[i.tenant_id].name }}</span>
+      <span class="pill {{ 's-quarantined' if i.status == 'open' else 's-idle' }}">{{ i.status }}</span></div>
+    <h4>{{ i.reason }}</h4>
+    <div class="facts">
+      <span>opened {{ i.opened|ago }}</span><span>rule: {{ i.rule }}</span>
+      <span>data egress: {{ tower.world.egress_bytes }} bytes</span>
+      {% if i.closed_by %}<span>closed by {{ i.closed_by }}</span>{% endif %}
+    </div>
+    {% if full %}
+      <div class="faint">Evidence (warnings and violations, newest first)</div>
+      <ul class="evidence">
+        {% for e in evidence[i.id] %}<li class="sev-{{ e.severity }}">#{{ e.id }} {{ e.ts|clock }} · {{ e.summary }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% if i.status == 'open' %}
+      <div class="actions">
+        <a class="btn sm ghost" href="/agents/{{ i.agent_id }}">Replay</a>
+        <button class="btn sm" hx-post="/incidents/{{ i.id }}/release" hx-swap="none"
+                hx-confirm="Release {{ ag.name }} with fresh credentials? The frozen task is discarded.">Release</button>
+        <button class="btn sm danger" hx-post="/incidents/{{ i.id }}/kill" hx-swap="none"
+                hx-confirm="Kill {{ ag.name }}?">Kill agent</button>
+      </div>
+    {% endif %}
+  </div>
+{% endfor %}

@@ -1,0 +1,11 @@
+# local-only: reference repos (ICM, ECC), Loom script, private notes
+_local/
+# secrets and runtime data
+.env
+data/
+*.db
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

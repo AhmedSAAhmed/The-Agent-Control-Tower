@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Architecture · Agent Control Tower{% endblock %}
+{% block hero %}
+  <h1>Agent events → control plane → operator</h1>
+  <p class="lede">Agents never touch a system directly. Every tool call is a request to the control plane, and every request, verdict and intervention is an event.</p>
+{% endblock %}
+{% block body %}
+  <div class="arch" style="margin-top:24px">
+    <div class="box"><h3>1 · Agents</h3><ul>
+      <li>4 asyncio workers, 3 jobs: KYC, withdrawals, support</li>
+      <li>Reason with free LLMs: Groq gpt-oss-20b → Gemini Flash-Lite → OpenRouter, scripted fallback</li>
+      <li>Checkpoint between every step: pause / kill land within one step</li></ul></div>
+    <div class="box"><h3>2 · Tool gateway</h3><ul>
+      <li>Only path from an agent to a system</li>
+      <li>Credentials check (revoked → refuse)</li>
+      <li>Policy verdict: allow · approve · deny</li>
+      <li>Approval = a future the agent awaits</li></ul></div>
+    <div class="box"><h3>3 · Control plane</h3><ul>
+      <li>Policy engine (<span class="mono">policy.yaml</span>): scope, egress, PII, privilege, budget, limits</li>
+      <li>Guardian: strikes, rate, drift → quarantine</li>
+      <li>Prompt Guard input scan → taint</li>
+      <li>Event store: SQLite, SHA-256 chained</li></ul></div>
+    <div class="box"><h3>4 · Operator UI</h3><ul>
+      <li>SSE stream → HTMX panels (no polling)</li>
+      <li>Approve / deny, pause / resume, kill / restart, release</li>
+      <li>Replay last N steps, cost per task</li>
+      <li>Tenant filter, audit export + verify</li></ul></div>
+  </div>
+  <div class="grid" style="margin-top:24px">
+    <section class="panel"><div class="panel-h"><h2>Life of a risky action</h2></div><div class="panel-b prose" style="font-size:14px">
+      <ol>
+        <li>Faisal (withdrawals) decides to pay 18,500 BHD to a beneficiary added 2 hours ago and calls <span class="mono">payments.execute</span>.</li>
+        <li>The gateway asks the policy engine: amount above the tenant's 2,000 BHD threshold and a new beneficiary, so the verdict is <b>approve</b> at risk 75.</li>
+        <li>An approval is queued and <span class="mono">approval.requested</span> is emitted; the SSE stream pushes it to every operator screen within a second.</li>
+        <li>Faisal's card turns amber: <i>Awaiting human approval</i>. The agent is parked on a future; nothing executes.</li>
+        <li>The operator opens the replay to see why, then approves or denies. The decision, the operator's name and the wait time are chained into the audit log. No decision within 10 minutes means it expires: <b>fail closed</b>.</li>
+      </ol></div></section>
+    <section class="panel"><div class="panel-h"><h2>Multi-tenant</h2></div><div class="panel-b" style="font-size:14px">
+      <p>Every event carries a <span class="mono">tenant_id</span>. Policy thresholds, currencies and egress rules are per tenant. The tenant switcher scopes the fleet, the queue, the stream, costs and the audit export. An emergency stop can be fleet-wide or per tenant.</p>
+      <p class="faint">Tenants mirror sectors DOO serves (banking, telecom, delivery) and are fictional.</p>
+    </div></section>
+  </div>
+{% endblock %}

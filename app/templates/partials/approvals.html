@@ -1,0 +1,21 @@
+{% if not pending %}<div class="empty">Nothing waiting. Risky actions land here before they execute.</div>{% endif %}
+{% for p in pending %}
+  {% set ag = tower.agents[p.agent_id] %}
+  <div class="appr">
+    <div class="appr-h">
+      <span><b>{{ p.id }}</b> · {{ ag.name }} · {{ tenants[p.tenant_id].name }}</span>
+      <span>risk <span class="risk {{ 'hi' if p.risk >= 75 else 'md' if p.risk >= 50 }}">{{ p.risk }}</span> · {{ p.created|ago }}</span>
+    </div>
+    <div class="what mono">{{ p.tool }}</div>
+    <ul>{% for r in p.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+    <pre>{{ p.args|pretty }}</pre>
+    <div class="actions">
+      <button class="btn sm ok" hx-post="/approvals/{{ p.id }}/approve" hx-swap="none">Approve</button>
+      <button class="btn sm danger" hx-post="/approvals/{{ p.id }}/deny" hx-swap="none">Deny</button>
+      <a class="btn sm ghost" href="/agents/{{ p.agent_id }}?task={{ p.task_id }}">Why? (replay)</a>
+    </div>
+  </div>
+{% endfor %}
+{% for r in recent %}
+  <div class="done-row">{{ r.id }} <b>{{ r.status }}</b> by {{ r.decided_by }} · {{ r.tool }} · {{ r.created|ago }}</div>
+{% endfor %}

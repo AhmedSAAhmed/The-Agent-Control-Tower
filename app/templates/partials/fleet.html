@@ -1,0 +1,43 @@
+<div class="cards">
+{% for a in agents %}
+  <article class="card st-{{ a.status }}">
+    <div class="card-top">
+      <div>
+        <h3><a href="/agents/{{ a.id }}{{ '?t=' ~ (tenant_id or '') }}">{{ a.name }}</a> <span class="sub">· {{ a.role }}</span></h3>
+        <div class="sub">{{ tenants[a.tenant_id].name }} · {{ tenants[a.tenant_id].region }}</div>
+      </div>
+      <span class="pill s-{{ a.status }}">{{ STATUS_LABEL[a.status] }}</span>
+    </div>
+    <div class="now">
+      <span class="k">Current task</span>{{ a.task.title if a.task else '—' }}
+    </div>
+    <div class="now">
+      <span class="k">Last action</span>{{ a.last_action }}
+    </div>
+    {% if a.blocker %}<div class="blocker">{{ a.blocker }}</div>{% endif %}
+    <div class="metrics">
+      <div><b>{{ a.tasks_done }}</b><span>tasks</span></div>
+      <div><b>{{ (a.tokens_in + a.tokens_out)|num }}</b><span>tokens</span></div>
+      <div><b>{{ a.cost_usd|usd }}</b><span>of ${{ '%.2f'|format(a.budget_usd) }}</span>
+        <div class="bar {{ 'hot' if a.budget_pct > 80 }}"><i style="width:{{ a.budget_pct }}%"></i></div></div>
+      <div><b class="{{ 'sev-warn' if a.drift >= 0.4 }}">{{ (a.drift * 100)|int }}%</b><span>drift</span></div>
+    </div>
+    <div class="actions">
+      {% if a.status == 'killed' %}
+        <button class="btn sm" hx-post="/agents/{{ a.id }}/restart" hx-swap="none">Restart clean</button>
+      {% elif a.status == 'quarantined' %}
+        <a class="btn sm dark" href="/incidents{{ '?t=' ~ (tenant_id or '') }}">Review incident</a>
+        <button class="btn sm danger" hx-post="/agents/{{ a.id }}/kill" hx-swap="none" hx-confirm="Kill {{ a.name }}? Credentials are revoked and pending approvals voided.">Kill</button>
+      {% else %}
+        {% if a.status == 'paused' %}
+          <button class="btn sm ok" hx-post="/agents/{{ a.id }}/resume" hx-swap="none">Resume</button>
+        {% else %}
+          <button class="btn sm" hx-post="/agents/{{ a.id }}/pause" hx-swap="none">Pause</button>
+        {% endif %}
+        <button class="btn sm danger" hx-post="/agents/{{ a.id }}/kill" hx-swap="none" hx-confirm="Kill {{ a.name }}? Credentials are revoked and pending approvals voided.">Kill</button>
+      {% endif %}
+      <a class="btn sm ghost" href="/agents/{{ a.id }}{{ '?t=' ~ (tenant_id or '') }}">Replay</a>
+    </div>
+  </article>
+{% endfor %}
+</div>

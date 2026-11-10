@@ -1,0 +1,43 @@
+<div class="grid">
+  <section class="panel">
+    <div class="panel-h"><h2>By agent</h2><span class="faint">LLM mode: {{ tower.llm.mode }} · {{ tower.llm.stats.calls }} LLM calls · {{ tower.llm.stats.fallbacks }} scripted fallbacks</span></div>
+    <div class="scroll-x"><table>
+      <tr><th>Agent</th><th>Tenant</th><th class="r">Tasks</th><th class="r">Tokens in</th><th class="r">Tokens out</th><th class="r">Cost</th><th class="r">$/task</th><th>Budget</th></tr>
+      {% for a in agents %}
+      <tr>
+        <td><a href="/agents/{{ a.id }}">{{ a.name }}</a> <span class="faint">{{ a.role }}</span></td>
+        <td>{{ tenants[a.tenant_id].name }}</td>
+        <td class="r">{{ a.tasks_done }}</td>
+        <td class="r">{{ a.tokens_in|num }}</td>
+        <td class="r">{{ a.tokens_out|num }}</td>
+        <td class="r">{{ a.cost_usd|usd }}</td>
+        <td class="r">{{ (a.cost_usd / a.tasks_done)|usd if a.tasks_done else '—' }}</td>
+        <td style="min-width:120px">{{ a.budget_pct }}% of ${{ '%.2f'|format(a.budget_usd) }}<div class="bar {{ 'hot' if a.budget_pct > 80 }}"><i style="width:{{ a.budget_pct }}%"></i></div></td>
+      </tr>
+      {% endfor %}
+    </table></div>
+  </section>
+  <section class="panel">
+    <div class="panel-h"><h2>By tenant</h2></div>
+    <table>
+      <tr><th>Tenant</th><th class="r">Tasks</th><th class="r">Tokens</th><th class="r">Cost</th></tr>
+      {% for tid, r in by_tenant.items() %}
+      <tr><td>{{ tenants[tid].name }}<div class="faint">{{ tenants[tid].sector }}</div></td><td class="r">{{ r.tasks }}</td><td class="r">{{ r.tokens|num }}</td><td class="r">{{ r.cost|usd }}</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+</div>
+<section class="panel" style="margin-top:20px">
+  <div class="panel-h"><h2>Per task (latest 40)</h2></div>
+  <div class="scroll-x"><table>
+    <tr><th>Task</th><th>Agent</th><th>Status</th><th class="r">LLM calls</th><th class="r">Tool calls</th><th class="r">Tokens</th><th class="r">Cost</th><th class="r">Duration</th></tr>
+    {% for t in tasks %}{% set a = owner[t.id] %}
+    <tr>
+      <td><a href="/agents/{{ a.id }}?task={{ t.id }}">{{ t.title }}</a> <span class="faint mono">{{ t.id }}</span></td>
+      <td>{{ a.name }}</td><td>{{ t.status }}</td>
+      <td class="r">{{ t.llm_calls }}</td><td class="r">{{ t.tool_calls }}</td>
+      <td class="r">{{ (t.tokens_in + t.tokens_out)|num }}</td><td class="r">{{ t.cost_usd|usd }}</td><td class="r">{{ t.duration_s }}s</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+</section>

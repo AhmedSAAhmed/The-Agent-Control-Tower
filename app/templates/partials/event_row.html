@@ -1,0 +1,1 @@
+<li class="sev-{{ e.severity }}"><span class="mono faint">{{ e.ts|clock }}</span><span class="who">{{ e.actor.split(':')[-1] }}{% if e.tenant_id %} · {{ tenants[e.tenant_id].name }}{% endif %}</span><span class="typ mono {{ 'sev-' ~ e.severity }}">{{ e.type }}</span><span class="sum">{{ e.summary }}</span></li>

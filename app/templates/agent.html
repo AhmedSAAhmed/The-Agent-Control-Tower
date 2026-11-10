@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ agent.name }} · Agent Control Tower{% endblock %}
+{% block hero %}
+  <h1>{{ agent.name }} <em>·</em> {{ agent.role }}</h1>
+  <p class="lede">{{ tenants[agent.tenant_id].name }} · {{ tenants[agent.tenant_id].sector }} · {{ tenants[agent.tenant_id].region }}.
+    Replay shows what the agent saw, what it reasoned, what it asked the control plane to do, and what the control plane decided.</p>
+{% endblock %}
+{% block body %}
+  <section class="panel" style="margin-top:20px" id="agent-head" hx-get="/p/agent/{{ agent.id }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></section>
+
+  <div class="grid" style="margin-top:20px">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>Replay{% if task %} · task {{ task }}{% else %} · last N steps{% endif %}</h2>
+        <form class="player" hx-get="/p/replay/{{ agent.id }}" hx-target="#replay" hx-trigger="change, submit">
+          {% if task %}<input type="hidden" name="task" value="{{ task }}"><a class="btn sm ghost" href="/agents/{{ agent.id }}">All steps</a>{% endif %}
+          <label class="faint">N <select name="n">{% for n in [10, 25, 50, 100] %}<option {{ 'selected' if n == 25 }}>{{ n }}</option>{% endfor %}</select></label>
+          <button class="btn sm ghost" type="submit">Reload</button>
+          <button class="btn sm ghost" type="button" id="first">⏮</button>
+          <button class="btn sm ghost" type="button" id="prev">◀</button>
+          <button class="btn sm" type="button" id="play">▶ Play</button>
+          <button class="btn sm ghost" type="button" id="next">▶▏</button>
+          <span class="faint mono" id="step-pos"></span>
+        </form>
+      </div>
+      <div id="replay" hx-get="/p/replay/{{ agent.id }}?n=25{{ '&task=' ~ task if task }}" hx-trigger="load"></div>
+    </section>
+    <aside class="panel">
+      <div class="panel-h"><h2>Tasks · cost per task</h2></div>
+      <div hx-get="/p/tasks/{{ agent.id }}" hx-trigger="load, sse:fleet, refresh from:body" hx-swap="morph:innerHTML"></div>
+    </aside>
+  </div>
+{% endblock %}
