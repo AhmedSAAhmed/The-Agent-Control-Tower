@@ -165,8 +165,10 @@ class Agent:
             except Exception as exc:  # an agent bug must surface on the tower, never kill the runner silently
                 self.emit("agent.error", f"Unhandled {type(exc).__name__}: {exc}", "critical")
                 self._end("failed", type(exc).__name__)
-            gap = self.tower.task_gap * random.uniform(0.7, 1.3)
-            await asyncio.sleep(gap)
+            # Rest between tasks, but pick up drill work immediately.
+            end = time.monotonic() + self.tower.task_gap * random.uniform(0.7, 1.3)
+            while time.monotonic() < end and not self.tower.world.forced.get(self.id):
+                await asyncio.sleep(0.25)
 
     def _begin(self, work: dict) -> None:
         self.task = Task(f"T-{next(_task_ids):05d}", work["title"], work["ref"])

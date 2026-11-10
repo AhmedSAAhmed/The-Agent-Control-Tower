@@ -131,6 +131,27 @@ def test_approval_blocks_until_human_decides():
     assert t.store.query(types=["approval.approved"])[0]["actor"] == "operator:tester"
 
 
+def test_drill_preempts_a_pending_approval():
+    async def scenario():
+        t = Tower(**{**FAST, "task_gap": 30}, guardian_overrides={"max_tool_calls_per_30s": 1000})
+        t.always_active = True
+        await t.start()
+        faisal = t.agents["faisal-withdrawals"]
+        t.world.force(faisal.id, {"kind": "withdrawals", "ref": "WD-1", "customer": "x", "amount": 9000.0,
+                                  "currency": "BHD", "beneficiary": "B", "beneficiary_age_hours": 500,
+                                  "destination_country": "Bahrain", "title": "WD-1"})
+        assert await until(lambda: faisal.status == "waiting_approval")
+        t.drill("withdrawal", "tester")
+        started = await until(lambda: faisal.task and faisal.task.ref == "WD-90417", timeout=3)
+        voided = t.store.query(types=["approval.voided"])
+        await t.stop()
+        return started, voided
+
+    started, voided = run(scenario())
+    assert started, "drill should start within seconds even with a 30 s task gap"
+    assert voided and voided[0]["actor"] == "operator:tester"
+
+
 def test_pause_resume_and_kill_take_effect():
     async def scenario():
         t = Tower(**FAST, guardian_overrides={"max_tool_calls_per_30s": 1000})
@@ -144,7 +165,12 @@ def test_pause_resume_and_kill_take_effect():
         await asyncio.sleep(1.0)
         paused_ok = noor.tasks_done == frozen and noor.status == "paused"
         t.resume(noor.id, "tester")
-        resumed_ok = await until(lambda: noor.tasks_done > frozen)
+
+        def progressed():  # answer any approval so only pause/resume is under test
+            for p in t.approvals.pending():
+                t.decide(p.id, True, "tester")
+            return noor.tasks_done > frozen
+        resumed_ok = await until(progressed)
         t.kill(noor.id, "tester")
         await asyncio.sleep(0.2)
         killed_ok = noor.status == "killed" and noor.revoked and noor.runner.done()

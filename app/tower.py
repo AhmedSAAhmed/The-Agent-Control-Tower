@@ -284,10 +284,17 @@ class Tower:
                                     "docs": "complete", "title": "KYC review APP-55120 · Yousef Al-Khalifa"})
         else:
             raise KeyError(name)
+        note = ""
         if a.status in {"paused", "killed", "quarantined"}:
-            note = f" ({a.name} is {a.status}; the work is queued until it is back)"
-        else:
-            note = ""
+            how = {"paused": "resume it", "killed": "restart it",
+                   "quarantined": "release or kill it from Incidents"}[a.status]
+            note = f" ({a.name} is {a.status}; {how} to run the drill)"
+        # A drill must start now, not after an approval nobody is looking at expires.
+        for appr in self.approvals.void_for_agent(a.id, f"operator:{by}", "voided to start a drill"):
+            self.bus.emit(type="approval.voided", severity="info", actor=f"operator:{by}",
+                          tenant_id=a.tenant_id, agent_id=a.id, task_id=appr.task_id,
+                          summary=f"{appr.id} voided ({appr.tool} not executed) to start a drill",
+                          data={"approval_id": appr.id, "tool": appr.tool, "args": appr.args})
         self.bus.emit(type="drill.started", summary=f"Drill started: {self.DRILLS[name]}{note}", severity="warn",
                       actor=f"operator:{by}", tenant_id=a.tenant_id, agent_id=a.id, data={"drill": name})
         return a.id

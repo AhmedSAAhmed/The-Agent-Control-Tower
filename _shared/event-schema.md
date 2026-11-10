@@ -17,7 +17,7 @@ genesis `prev_hash` is 64 zeros. Editing, deleting or reordering any row breaks 
 | Reasoning | `agent.think` (provider, model, tokens, cost, prompt, output), `agent.observe`, `agent.blocked`, `agent.error` |
 | Input guard | `guard.scan`, `guard.injection` |
 | Gateway | `tool.executed`, `tool.denied` (rules, risk) |
-| Approvals | `approval.requested`, `approval.approved`, `approval.denied`, `approval.expired` |
+| Approvals | `approval.requested`, `approval.approved`, `approval.denied`, `approval.expired`, `approval.voided` |
 | Operator | `agent.paused`, `agent.resumed`, `agent.killed`, `agent.restarted`, `agent.budget_raised`, `system.mode` |
 | Guardian | `guardian.quarantine`, `guardian.released`, `drift.sample`, `drift.alert` |
 | System | `system.boot`, `drill.started` |
